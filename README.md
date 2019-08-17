@@ -4,7 +4,7 @@
 	<br/> <br/>
 	<strong>Rich Presence? For an emulated game?<br/></strong>
     <p>Sure! Why not! It's quite easy actually!</p>
-<b>Id: dolphin.shadowthehedgehog.rpc</b>
+<b>Id: sonicheroes.utils.discordrpc</b>
 </div>
 
 

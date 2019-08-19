@@ -8,16 +8,19 @@ namespace SonicHeroes.Utils.DiscordRPC
     public class Program : IMod
     {
         private IModLoader _modLoader;
-        private IReloadedHooks _reloadedHooks; // Shared lib not unloadable. Ok!
+        private WeakReference<IReloadedHooks> _reloadedHooks;
         private HeroesRPC _heroesRpc;
 
         public void Start(IModLoaderV1 loader)
         {
             _modLoader = (IModLoader)loader;
-            _modLoader.GetController<IReloadedHooks>().TryGetTarget(out _reloadedHooks);
+            _reloadedHooks = _modLoader.GetController<IReloadedHooks>();
 
             /* Your mod code starts here. */
-            _heroesRpc = new HeroesRPC(_reloadedHooks);
+            if (_reloadedHooks.TryGetTarget(out var hooks))
+            {
+                _heroesRpc = new HeroesRPC(hooks);
+            }
         }
 
         /* Mod loader actions. */

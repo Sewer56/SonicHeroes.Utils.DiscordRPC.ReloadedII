@@ -65,9 +65,9 @@ namespace SonicHeroes.Utils.DiscordRPC.Heroes
         /// <summary>
         /// Executes original function and checks for possible increment of player score.
         /// </summary>
-        private char CheckScoreIncrementHookFunction(void* thisPointer)
+        private void* CheckScoreIncrementHookFunction(void* thisPointer)
         {
-            char result = _tObjTeamExecHook.OriginalFunction(thisPointer);
+            void* result = _tObjTeamExecHook.OriginalFunction(thisPointer);
 
             // Custom Code
             VictoryStruct currentVictories = *_currentVictoryCount;
@@ -93,6 +93,6 @@ namespace SonicHeroes.Utils.DiscordRPC.Heroes
 
         [Function(CallingConventions.MicrosoftThiscall)]
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        private delegate char TObjTeam_Exec(void* thisPointer);
+        private delegate void* TObjTeam_Exec(void* thisPointer);
     }
 }

@@ -3,7 +3,7 @@
 	<img src="https://i.imgur.com/BjPn7rU.png" width="150" align="center" />
 	<br/> <br/>
 	<strong>Rich Presence? For an emulated game?<br/></strong>
-    <p>Sure! Why not! It's quite easy actually!</p>
+    <p>Wait, wait, wait!! This isn't Shadow The Hedgehog!</p>
 <b>Id: sonicheroes.utils.discordrpc</b>
 </div>
 

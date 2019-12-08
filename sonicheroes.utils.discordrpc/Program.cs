@@ -1,4 +1,5 @@
 ﻿using System;
+using Heroes.SDK;
 using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
 using Reloaded.Mod.Interfaces.Internal;
@@ -19,20 +20,14 @@ namespace SonicHeroes.Utils.DiscordRPC
             /* Your mod code starts here. */
             if (_reloadedHooks.TryGetTarget(out var hooks))
             {
-                _heroesRpc = new HeroesRPC(hooks);
+                SDK.Init(hooks);
+                _heroesRpc = new HeroesRPC();
             }
         }
 
         /* Mod loader actions. */
-        public void Suspend()
-        {
-            _heroesRpc.Suspend();
-        }
-
-        public void Resume()
-        {
-            _heroesRpc.Resume();
-        }
+        public void Suspend() => _heroesRpc.Suspend();
+        public void Resume() => _heroesRpc.Resume();
 
         public void Unload()
         {

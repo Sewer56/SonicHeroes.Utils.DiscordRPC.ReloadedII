@@ -1,10 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using DiscordRPC;
-using Reloaded.Hooks.ReloadedII.Interfaces;
-using SonicHeroes.Utils.DiscordRPC.Heroes.Definitions.Enums;
+using Heroes.SDK.API;
+using Heroes.SDK.Definitions.Enums;
+using Heroes.SDK.Definitions.Enums.Custom;
+using Heroes.SDK.Definitions.Structures.State;
+using SonicHeroes.Utils.DiscordRPC.Heroes;
 using SonicHeroes.Utils.DiscordRPC.Heroes.Utilities;
 
 namespace SonicHeroes.Utils.DiscordRPC
@@ -12,15 +13,19 @@ namespace SonicHeroes.Utils.DiscordRPC
     public class HeroesRPC : IDisposable
     {
         private DiscordRpcClient _discordRpc;
-        private Heroes.Heroes _heroes;
-        private System.Threading.Timer _timer;
+        private CutsceneTracker _cutsceneTracker;
+        private Timer _timer;
         private bool _enableRpc = true;
-        
+
+        private VictoryCounter _victoryCounter;
+
         /* Setup/Teardown */
 
-        public HeroesRPC(IReloadedHooks hooks)
+        public HeroesRPC()
         {
-            _heroes = new Heroes.Heroes(hooks);
+            _cutsceneTracker = new CutsceneTracker();
+            _victoryCounter  = new VictoryCounter();
+
             _discordRpc = new DiscordRpcClient("494266376899395605"); // Not like you could get this from decompiling anyway. Obfuscation? That sucks.
             _discordRpc.Initialize();
             _timer = new Timer(OnTick, null, 0, 5000);
@@ -33,15 +38,8 @@ namespace SonicHeroes.Utils.DiscordRPC
         }
 
         /* Mod Loader API Helpers */
-        public void Suspend()
-        {
-            _enableRpc = false;
-        }
-
-        public void Resume()
-        {
-            _enableRpc = true;
-        }
+        public void Suspend() => _enableRpc = false;
+        public void Resume()  => _enableRpc = true;
 
         /* Implementation */
         private unsafe void OnTick(object state)
@@ -57,18 +55,18 @@ namespace SonicHeroes.Utils.DiscordRPC
                 Timestamps timeStamps = new Timestamps();
 
                 // Set timestamp.
-                if ((!_heroes.IsInMainMenu()) && (!_heroes.IsPaused()) && (!_heroes.IsWatchingIngameEvent()))
+                if ((!State.IsInMainMenu()) && (!State.IsPaused()) && (!State.IsWatchingIngameEvent()))
                 {
                     // Do not set timestamp if paused.
-                    DateTime levelStartTime = DateTime.UtcNow.Subtract(new TimeSpan(0, 0, (int)(*_heroes.CurrentStageTime).GetTotalSeconds()));
+                    DateTime levelStartTime = DateTime.UtcNow.Subtract(World.Time.ToTimeSpan());
                     timeStamps.Start = levelStartTime;
                     richPresence.Timestamps = timeStamps;
                 }
 
                 // Get Image
-                if (!_heroes.IsInMainMenu())
+                if (!State.IsInMainMenu())
                 {
-                    if (ImageNameDictionary.Dictionary.TryGetValue(*_heroes.StageID, out string stageAssetName))
+                    if (ImageNameDictionary.Dictionary.TryGetValue(State.CurrentStage, out string stageAssetName))
                     {
                         richPresence.Assets.LargeImageKey = stageAssetName;
                     }
@@ -86,20 +84,16 @@ namespace SonicHeroes.Utils.DiscordRPC
         {
             string currentDetails;
 
-            if (_heroes.IsPlayingFmv)
+            if (_cutsceneTracker.IsPlayingFmv)
                 currentDetails = "Watching FMV";
-
-            else if (_heroes.IsWatchingIngameEvent())
-                currentDetails = $"Watching Cutscene in {_heroes.GetStageName()}";
-
-            else if (_heroes.IsInMainMenu())
+            else if (State.IsWatchingIngameEvent())
+                currentDetails = $"Watching Cutscene in {State.GetStageName()}";
+            else if (State.IsInMainMenu())
                 currentDetails = $"Navigating the Menus";
-
-            else if (_heroes.IsTwoPlayer())
-                currentDetails = $"Versus Mode: {_heroes.GetStageName()}";
-
+            else if (State.IsMultiplayerMode())
+                currentDetails = $"Versus Mode: {State.GetStageName()}";
             else
-                currentDetails = $"Playing in {_heroes.GetStageName()}";
+                currentDetails = $"Playing in {State.GetStageName()}";
 
             return currentDetails;
         }
@@ -112,48 +106,51 @@ namespace SonicHeroes.Utils.DiscordRPC
             string currentGameState = "";
 
             // Normal Game (Playing)
-            if ((!_heroes.IsWatchingIngameEvent()) && (*_heroes.GameState == GameState.InGame))
+            if ((!State.IsWatchingIngameEvent()) && (State.GameState == GameState.InGame))
             {
-                MissionMode missionMode = (**_heroes.GameControlStructPointer).MissionMode;
-
-                switch (missionMode)
+                if (State.ModeSwitch.TryDereference(out ModeSwitch* modeSwitch))
                 {
-                    case MissionMode.HardMode when *_heroes.TeamOne != Team.Sonic:
-                        currentGameState = $"Hard Mode, Team {_heroes.GetTeamName(1)}";
-                        break;
+                    MissionMode missionMode = modeSwitch->Mission;
 
-                    case MissionMode.HardMode:
-                        currentGameState = $"Hard Mode";
-                        break;
+                    switch (missionMode)
+                    {
+                        case MissionMode.HardMode when Player.Teams[0] != Team.Sonic:
+                            currentGameState = $"Hard Mode, Team {Player.GetTeamName(Players.One)}";
+                            break;
 
-                    case MissionMode.Alternate:
-                        currentGameState = $"Team {_heroes.GetTeamName(1)}, Mission II";
-                        break;
+                        case MissionMode.HardMode:
+                            currentGameState = $"Hard Mode";
+                            break;
 
-                    default:
-                        currentGameState = $"Team {_heroes.GetTeamName(1)}";
-                        break;
+                        case MissionMode.Alternate:
+                            currentGameState = $"Team {Player.GetTeamName(Players.One)}, Mission II";
+                            break;
+
+                        default:
+                            currentGameState = $"Team {Player.GetTeamName(Players.One)}";
+                            break;
+                    }
                 }
             }
 
             // Two player mode.
-            if (_heroes.IsTwoPlayer() && (!_heroes.IsInMainMenu()))
+            if (State.IsMultiplayerMode() && (!State.IsInMainMenu()))
             {
-                int total1PVictories = _heroes.VictoryTracker.GetTotalVictoryCount(1);
-                int total2PVictories = _heroes.VictoryTracker.GetTotalVictoryCount(2);
+                int total1PVictories = _victoryCounter.GetTotalVictoryCount(Players.One);
+                int total2PVictories = _victoryCounter.GetTotalVictoryCount(Players.Two);
 
-                int current1PVictories = _heroes.VictoryTracker.GetVictoryCount(1);
-                int current2PVictories = _heroes.VictoryTracker.GetVictoryCount(2);
+                int current1PVictories = _victoryCounter.GetVictoryCount(Players.One);
+                int current2PVictories = _victoryCounter.GetVictoryCount(Players.Two);
 
-                string teamName1P = _heroes.GetTeamName(1);
-                string teamName2P = _heroes.GetTeamName(2);
+                string teamName1P = Player.GetTeamName(Players.One);
+                string teamName2P = Player.GetTeamName(Players.Two);
 
                 currentGameState = $"Total: {total1PVictories}-{total2PVictories} | {teamName1P} vs {teamName2P} | Set: {current1PVictories}-{current2PVictories}";
             }
 
 
             // Gameplay Paused
-            if (_heroes.IsPaused())
+            if (State.IsPaused())
                 currentGameState = "Paused";
 
             return currentGameState;

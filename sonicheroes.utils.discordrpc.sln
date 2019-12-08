@@ -3,7 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29209.62
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SonicHeroes.Utils.DiscordRPC", "sonicheroes.utils.discordrpc\SonicHeroes.Utils.DiscordRPC.csproj", "{0EE8441A-1709-4BEE-8A91-05FE0F5C1BD8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SonicHeroes.Utils.DiscordRPC", "sonicheroes.utils.discordrpc\SonicHeroes.Utils.DiscordRPC.csproj", "{0EE8441A-1709-4BEE-8A91-05FE0F5C1BD8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Submodules", "Submodules", "{E2432BEA-3706-4A57-BCDB-6F5FF1B7B65B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Heroes.SDK", "Submodules\Heroes.SDK\Heroes.SDK.Library\Heroes.SDK.csproj", "{37A40DAC-296C-4A7A-9097-1B4A283723A3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,9 +19,16 @@ Global
 		{0EE8441A-1709-4BEE-8A91-05FE0F5C1BD8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0EE8441A-1709-4BEE-8A91-05FE0F5C1BD8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0EE8441A-1709-4BEE-8A91-05FE0F5C1BD8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37A40DAC-296C-4A7A-9097-1B4A283723A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37A40DAC-296C-4A7A-9097-1B4A283723A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37A40DAC-296C-4A7A-9097-1B4A283723A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37A40DAC-296C-4A7A-9097-1B4A283723A3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{37A40DAC-296C-4A7A-9097-1B4A283723A3} = {E2432BEA-3706-4A57-BCDB-6F5FF1B7B65B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {72A0D412-3EE0-4D21-9915-6D4760D55655}

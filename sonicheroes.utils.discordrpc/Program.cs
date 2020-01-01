@@ -20,7 +20,7 @@ namespace SonicHeroes.Utils.DiscordRPC
             /* Your mod code starts here. */
             if (_reloadedHooks.TryGetTarget(out var hooks))
             {
-                SDK.Init(hooks);
+                SDK.Init(hooks, null);
                 _heroesRpc = new HeroesRPC();
             }
         }

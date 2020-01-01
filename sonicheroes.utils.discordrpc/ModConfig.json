@@ -2,7 +2,7 @@
   "ModId": "sonicheroes.utils.discordrpc",
   "ModName": "Sonic Heroes: Discord Rich Presence",
   "ModAuthor": "Sewer56",
-  "ModVersion": "2.0.0",
+  "ModVersion": "2.0.1",
   "ModDescription": "Adds support for Discord Rich Presence to the PC version of Sonic Heroes.",
   "ModDll": "SonicHeroes.Utils.DiscordRPC.dll",
   "ModIcon": "Preview.png",

@@ -4,53 +4,52 @@ using Heroes.SDK.Definitions.Enums.Custom;
 using Heroes.SDK.Definitions.Structures.State;
 using Reloaded.Hooks.Definitions;
 
-namespace SonicHeroes.Utils.DiscordRPC.Heroes
+namespace SonicHeroes.Utils.DiscordRPC.Heroes;
+
+public unsafe class VictoryCounter
 {
-    public unsafe class VictoryCounter
+    // Members
+    private VictoryTracker  _lastVictoryCount;
+    private VictoryTracker  _totalVictories;
+
+    private IHook<TObjTeam.Native_Exec> _tObjTeamExecHook;
+
+    // Constructor
+    public VictoryCounter()
     {
-        // Members
-        private VictoryTracker  _lastVictoryCount;
-        private VictoryTracker  _totalVictories;
+        _tObjTeamExecHook = TObjTeam.Fun_Exec.Hook(CheckScoreIncrementHookFunction).Activate();
+    }
 
-        private IHook<TObjTeam.Native_Exec> _tObjTeamExecHook;
+    // Methods
 
-        // Constructor
-        public VictoryCounter()
-        {
-            _tObjTeamExecHook = TObjTeam.Fun_Exec.Hook(CheckScoreIncrementHookFunction).Activate();
-        }
+    /// <summary>
+    /// Returns the number of victories in the current set.
+    /// </summary>
+    public int GetVictoryCount(Players player) => State.VictoryTracker.GetNumberOfVictories(player);
 
-        // Methods
+    /// <summary>
+    /// Returns the total number of victories since the game started.
+    /// </summary>
+    public int GetTotalVictoryCount(Players player) => _totalVictories.GetNumberOfVictories(player);
 
-        /// <summary>
-        /// Returns the number of victories in the current set.
-        /// </summary>
-        public int GetVictoryCount(Players player) => State.VictoryTracker.GetNumberOfVictories(player);
+    /// <summary>
+    /// Executes original function and checks for possible increment of player score.
+    /// </summary>
+    private void* CheckScoreIncrementHookFunction(ref TObjTeam thisPointer)
+    {
+        void* result = _tObjTeamExecHook.OriginalFunction(ref thisPointer);
 
-        /// <summary>
-        /// Returns the total number of victories since the game started.
-        /// </summary>
-        public int GetTotalVictoryCount(Players player) => _totalVictories.GetNumberOfVictories(player);
+        // Custom Code
+        var tracker = State.VictoryTracker;
 
-        /// <summary>
-        /// Executes original function and checks for possible increment of player score.
-        /// </summary>
-        private void* CheckScoreIncrementHookFunction(ref TObjTeam thisPointer)
-        {
-            void* result = _tObjTeamExecHook.OriginalFunction(ref thisPointer);
+        if (tracker.PlayerOne > _lastVictoryCount.PlayerOne)         _totalVictories.PlayerOne++;
+        if (tracker.PlayerTwo > _lastVictoryCount.PlayerTwo)         _totalVictories.PlayerTwo++;
+        if (tracker.PlayerThree > _lastVictoryCount.PlayerThree)     _totalVictories.PlayerThree++;
+        if (tracker.PlayerFour > _lastVictoryCount.PlayerFour)       _totalVictories.PlayerFour++;
 
-            // Custom Code
-            var tracker = State.VictoryTracker;
+        _lastVictoryCount = tracker;
 
-            if (tracker.PlayerOne > _lastVictoryCount.PlayerOne)         _totalVictories.PlayerOne++;
-            if (tracker.PlayerTwo > _lastVictoryCount.PlayerTwo)         _totalVictories.PlayerTwo++;
-            if (tracker.PlayerThree > _lastVictoryCount.PlayerThree)     _totalVictories.PlayerThree++;
-            if (tracker.PlayerFour > _lastVictoryCount.PlayerFour)       _totalVictories.PlayerFour++;
-
-            _lastVictoryCount = tracker;
-
-            // End of Custom Code
-            return result;
-        }
+        // End of Custom Code
+        return result;
     }
 }

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading;
-using DiscordRPC;
+﻿using DiscordRPC;
 using Heroes.SDK.API;
 using Heroes.SDK.Definitions.Enums;
 using Heroes.SDK.Definitions.Enums.Custom;
@@ -12,12 +10,12 @@ namespace SonicHeroes.Utils.DiscordRPC;
 
 public class HeroesRPC : IDisposable
 {
-    private DiscordRpcClient _discordRpc;
-    private CutsceneTracker _cutsceneTracker;
-    private Timer _timer;
+    private readonly DiscordRpcClient _discordRpc;
+    private readonly CutsceneTracker _cutsceneTracker;
+    private readonly Timer _timer;
     private bool _enableRpc = true;
 
-    private VictoryCounter _victoryCounter;
+    private readonly VictoryCounter _victoryCounter;
 
     /* Setup/Teardown */
 
@@ -42,39 +40,34 @@ public class HeroesRPC : IDisposable
     public void Resume()  => _enableRpc = true;
 
     /* Implementation */
-    private unsafe void OnTick(object state)
+    private unsafe void OnTick(object? state)
     {
-        if (_enableRpc)
+        if (!_enableRpc) 
+            return;
+        
+        var richPresence = new RichPresence();
+        richPresence.Details = GetCurrentDetails();
+        richPresence.State = GetGameState();
+        richPresence.Assets = new Assets();
+
+        // Contains the start of current action.
+        var timeStamps = new Timestamps();
+
+        // Set timestamp.
+        if ((!State.IsInMainMenu()) && (!State.IsPaused()) && (!State.IsWatchingIngameEvent()))
         {
-            var richPresence = new RichPresence();
-            richPresence.Details = GetCurrentDetails();
-            richPresence.State = GetGameState();
-            richPresence.Assets = new Assets();
-
-            // Contains the start of current action.
-            Timestamps timeStamps = new Timestamps();
-
-            // Set timestamp.
-            if ((!State.IsInMainMenu()) && (!State.IsPaused()) && (!State.IsWatchingIngameEvent()))
-            {
-                // Do not set timestamp if paused.
-                DateTime levelStartTime = DateTime.UtcNow.Subtract(World.Time.ToTimeSpan());
-                timeStamps.Start = levelStartTime;
-                richPresence.Timestamps = timeStamps;
-            }
-
-            // Get Image
-            if (!State.IsInMainMenu())
-            {
-                if (ImageNameDictionary.Dictionary.TryGetValue(State.CurrentStage, out string stageAssetName))
-                {
-                    richPresence.Assets.LargeImageKey = stageAssetName;
-                }
-            }
-
-            // Send to Discord
-            _discordRpc.SetPresence(richPresence);
+            // Do not set timestamp if paused.
+            DateTime levelStartTime = DateTime.UtcNow.Subtract(World.Time.ToTimeSpan());
+            timeStamps.Start = levelStartTime;
+            richPresence.Timestamps = timeStamps;
         }
+
+        // Get Image
+        if (!State.IsInMainMenu() && ImageNameDictionary.Dictionary.TryGetValue(State.CurrentStage, out string? stageAssetName))
+            richPresence.Assets.LargeImageKey = stageAssetName;
+
+        // Send to Discord
+        _discordRpc.SetPresence(richPresence);
     }
 
     /// <summary>
@@ -147,7 +140,6 @@ public class HeroesRPC : IDisposable
 
             currentGameState = $"Total: {total1PVictories}-{total2PVictories} | {teamName1P} vs {teamName2P} | Set: {current1PVictories}-{current2PVictories}";
         }
-
 
         // Gameplay Paused
         if (State.IsPaused())

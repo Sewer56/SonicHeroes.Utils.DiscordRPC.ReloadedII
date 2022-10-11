@@ -1,5 +1,4 @@
-﻿using System;
-using Heroes.SDK;
+﻿using Heroes.SDK;
 using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
 using Reloaded.Mod.Interfaces.Internal;
@@ -8,9 +7,9 @@ namespace SonicHeroes.Utils.DiscordRPC;
 
 public class Program : IMod
 {
-    private IModLoader _modLoader;
-    private WeakReference<IReloadedHooks> _reloadedHooks;
-    private HeroesRPC _heroesRpc;
+    private IModLoader _modLoader = null!;
+    private WeakReference<IReloadedHooks> _reloadedHooks = null!;
+    private HeroesRPC _heroesRpc = null!;
 
     public void Start(IModLoaderV1 loader)
     {
@@ -18,11 +17,11 @@ public class Program : IMod
         _reloadedHooks = _modLoader.GetController<IReloadedHooks>();
 
         /* Your mod code starts here. */
-        if (_reloadedHooks.TryGetTarget(out var hooks))
-        {
-            SDK.Init(hooks, null);
-            _heroesRpc = new HeroesRPC();
-        }
+        if (!_reloadedHooks.TryGetTarget(out var hooks)) 
+            return;
+        
+        SDK.Init(hooks, null);
+        _heroesRpc = new HeroesRPC();
     }
 
     /* Mod loader actions. */
@@ -39,5 +38,5 @@ public class Program : IMod
     public bool CanSuspend() => true;
 
     /* Automatically called by the mod loader when the mod is about to be unloaded. */
-    public Action Disposing { get; }
+    public Action Disposing { get; } = () => { };
 }
